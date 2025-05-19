@@ -102,7 +102,7 @@
         function addAccount(type) {
             const container = document.getElementById(type + 'Accounts');
             const count = type === 'admired' ? ++admiredCount : ++dislikedCount;
-            console.log(`Adding ${type} account, count: ${count}`); // Log count increment
+            console.log(`Adding ${type} account, count: ${count}`);
             if (count > 10) {
                 alert('Maximum 10 accounts allowed.');
                 if (type === 'admired') admiredCount--;
@@ -118,6 +118,25 @@
                 <input type="text" id="${type}Desc${count}" name="${type}Desc${count}" placeholder="e.g., reason for ${type}">
             `;
             container.appendChild(div);
+        }
+
+        // Function to safely parse a username from a URL
+        function parseUsernameFromUrl(url) {
+            if (!url) return '';
+            try {
+                const parts = url.split('/');
+                const usernameIndex = parts.findIndex(part => part === 'instagram.com') + 1;
+                if (usernameIndex > 0 && usernameIndex < parts.length) {
+                    let username = parts[usernameIndex];
+                    username = username.split('?')[0];
+                    return username || '';
+                }
+                const nonEmptyParts = parts.filter(part => part);
+                return nonEmptyParts.length > 0 ? nonEmptyParts[nonEmptyParts.length - 1].split('?')[0] : '';
+            } catch (e) {
+                console.error('Error parsing username from URL:', url, e);
+                return '';
+            }
         }
 
         document.getElementById('onboardingForm').addEventListener('submit', async function(event) {
@@ -137,23 +156,19 @@
 
             console.log('FormData entries:', [...formData.entries()]);
 
-            // Process admired accounts
             for (let i = 1; i <= admiredCount; i++) {
                 const url = formData.get(`admiredAccount${i}`);
                 const desc = formData.get(`admiredDesc${i}`);
                 console.log(`Admired account ${i}: url=${url}, desc=${desc}`);
-                // Add account if either URL or description is provided
                 if (url || desc) {
                     data.accounts.push({ type: 'admired', url: url || '', description: desc || '' });
                 }
             }
 
-            // Process disliked accounts
             for (let i = 1; i <= dislikedCount; i++) {
                 const url = formData.get(`dislikedAccount${i}`);
                 const desc = formData.get(`dislikedDesc${i}`);
                 console.log(`Disliked account ${i}: url=${url}, desc=${desc}`);
-                // Add account if either URL or description is provided
                 if (url || desc) {
                     data.accounts.push({ type: 'disliked', url: url || '', description: desc || '' });
                 }
@@ -176,28 +191,41 @@
                     const text = await userResponse.text();
                     let errorData;
                     try {
-                        errorData = text ? JSON.parse(text) : { message: 'Empty response from Supabase' };
+                        errorData = text ? JSON.parse(text) : { message: 'Empty response from Supabase', status: userResponse.status };
                     } catch (e) {
-                        errorData = { message: 'Failed to parse response', rawText: text };
+                        errorData = { message: 'Failed to parse response', rawText: text, status: userResponse.status };
                     }
                     console.error('Supabase API error (users):', errorData);
                     throw new Error('Failed to submit user data: ' + JSON.stringify(errorData));
                 }
 
-                const user = await userResponse.json();
+                // Safely parse the users response
+                const userText = await userResponse.text();
+                let user;
+                try {
+                    user = userText ? JSON.parse(userText) : [];
+                    console.log('Parsed user response:', user);
+                } catch (e) {
+                    console.error('Failed to parse users response:', e, 'Raw response:', userText);
+                    throw new Error('Failed to parse users response: ' + e.message);
+                }
                 console.log('User insert response:', user);
 
                 if (!user || user.length === 0 || !user[0].user_id) {
+                    console.error('No user data or user_id returned from Supabase');
                     throw new Error('No user data or user_id returned from Supabase');
                 }
 
                 const userId = user[0].user_id;
+                console.log('Extracted user_id:', userId);
 
                 if (data.accounts.length === 0) {
                     console.log('No accounts to submit to instagram_accounts table');
                 } else {
                     for (const account of data.accounts) {
                         console.log('Submitting account data:', account);
+                        const username = parseUsernameFromUrl(account.url);
+                        console.log('Parsed username:', username);
                         const accountResponse = await fetch('https://aqlpovtwrpjvltppcgbi.supabase.co/rest/v1/instagram_accounts', {
                             method: 'POST',
                             headers: {
@@ -206,25 +234,35 @@
                             },
                             body: JSON.stringify({
                                 user_id: userId,
-                                account_username: account.url ? account.url.split('/').slice(-2, -1)[0] : '',
+                                account_username: username,
                                 account_type: account.type,
                                 description: account.description
                             })
                         });
 
+                        console.log('Instagram accounts response status:', accountResponse.status);
+
                         if (!accountResponse.ok) {
                             const text = await accountResponse.text();
                             let errorData;
                             try {
-                                errorData = text ? JSON.parse(text) : { message: 'Empty response from Supabase' };
+                                errorData = text ? JSON.parse(text) : { message: 'Empty response from Supabase', status: accountResponse.status };
                             } catch (e) {
-                                errorData = { message: 'Failed to parse response', rawText: text };
+                                errorData = { message: 'Failed to parse response', rawText: text, status: accountResponse.status };
                             }
                             console.error('Supabase API error (instagram_accounts):', errorData);
                             throw new Error('Failed to submit account data: ' + JSON.stringify(errorData));
                         }
 
-                        const accountResult = await accountResponse.json();
+                        const accountText = await accountResponse.text();
+                        let accountResult;
+                        try {
+                            accountResult = accountText ? JSON.parse(accountText) : [];
+                            console.log('Parsed account response:', accountResult);
+                        } catch (e) {
+                            console.error('Failed to parse instagram_accounts response:', e, 'Raw response:', accountText);
+                            throw new Error('Failed to parse instagram_accounts response: ' + e.message);
+                        }
                         console.log('Account insert response:', accountResult);
                     }
                 }
