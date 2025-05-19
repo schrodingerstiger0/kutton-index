@@ -41,7 +41,7 @@
     <!-- <h2>Login</h2> -->
     <!-- <p><a href="https://aqlpovtwrpjvltppcgbi.supabase.co/auth/v1/authorize?provider=google&redirect_to=https://aqlpovtwrpjvltppcgbi.supabase.co/auth/v1/callback">Login with Google</a></p> -->
     <h2>Onboarding Form</h2>
-    <form id="onboardingForm">
+    <form id="onboardingForm" action="javascript:void(0);">
         <div class="form-group">
             <label for="name">Name:</label>
             <input type="text" id="name" name="name" required>
@@ -94,6 +94,8 @@
     </form>
 
     <script>
+        console.log('JavaScript loaded successfully!'); // Add this to confirm script execution
+
         let admiredCount = 1;
         let dislikedCount = 1;
 
@@ -116,6 +118,7 @@
         }
 
         document.getElementById('onboardingForm').addEventListener('submit', async function(event) {
+            console.log('Form submission event triggered!');
             event.preventDefault();
             const formData = new FormData(this);
             const data = {
@@ -145,6 +148,7 @@
             }
 
             try {
+                console.log('Submitting user data:', data);
                 const userResponse = await fetch('https://aqlpovtwrpjvltppcgbi.supabase.co/rest/v1/users', {
                     method: 'POST',
                     headers: {
@@ -158,3 +162,48 @@
                     const errorData = await userResponse.json();
                     console.error('Supabase API error (users):', errorData);
                     throw new Error('Failed to submit user data: ' + JSON.stringify(errorData));
+                }
+
+                const user = await userResponse.json();
+                console.log('User insert response:', user);
+
+                if (!user || user.length === 0) {
+                    throw new Error('No user data returned from Supabase');
+                }
+
+                const userId = user[0].user_id;
+
+                for (const account of data.accounts) {
+                    console.log('Submitting account data:', account);
+                    const accountResponse = await fetch('https://aqlpovtwrpjvltppcgbi.supabase.co/rest/v1/instagram_accounts', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxbHBvdnR3cnBqdmx0cHBjZ2JpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc0Nzg2MzYsImV4cCI6MjA2MzA1NDYzNn0.tEocJLT-Ep5-12WMIuRak8SWkEvZ_FbjKsrEkNGaHFM'
+                        },
+                        body: JSON.stringify({
+                            user_id: userId,
+                            account_username: account.url.split('/').slice(-2, -1)[0],
+                            account_type: account.type,
+                            description: account.description
+                        })
+                    });
+
+                    if (!accountResponse.ok) {
+                        const errorData = await accountResponse.json();
+                        console.error('Supabase API error (instagram_accounts):', errorData);
+                        throw new Error('Failed to submit account data: ' + JSON.stringify(errorData));
+                    }
+
+                    const accountResult = await accountResponse.json();
+                    console.log('Account insert response:', accountResult);
+                }
+                alert('Onboarding completed successfully!');
+            } catch (error) {
+                console.error('Error submitting form:', error);
+                alert('Error submitting form: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>
