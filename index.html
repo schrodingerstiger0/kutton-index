@@ -37,4 +37,146 @@
 </head>
 <body>
     <h1>Kotton - Instagram Reel Script Generator</h1>
-    <!-- Temporarily commented out Google OAuth login link due to redirect
+    <!-- Temporarily commented out Google OAuth login link due to redirect_uri_mismatch error -->
+    <!-- <h2>Login</h2> -->
+    <!-- <p><a href="https://aqlpovtwrpjvltppcgbi.supabase.co/auth/v1/authorize?provider=google&redirect_to=https://aqlpovtwrpjvltppcgbi.supabase.co/auth/v1/callback">Login with Google</a></p> -->
+    <h2>Onboarding Form</h2>
+    <form id="onboardingForm">
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+        <div class="form-group">
+            <label for="username">Your Instagram Username:</label>
+            <input type="text" id="username" name="instagram_username" placeholder="e.g., johndoe" required>
+        </div>
+        <div class="form-group">
+            <label for="brandMission">What’s your brand mission?</label>
+            <textarea id="brandMission" name="brandMission" required></textarea>
+        </div>
+        <div class="form-group">
+            <label for="brandTone">Preferred Brand Tone:</label>
+            <select id="brandTone" name="brandTone">
+                <option value="Witty">Witty</option>
+                <option value="Inspirational">Inspirational</option>
+                <option value="Raw">Raw</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="humorLevel">Rate your content’s humor level (1–5):</label>
+            <input type="number" id="humorLevel" name="humorLevel" min="1" max="5" required>
+        </div>
+        <h3>Admired Instagram Accounts (up to 10)</h3>
+        <div id="admiredAccounts">
+            <div class="form-group">
+                <label for="admiredAccount1">Account 1 URL:</label>
+                <input type="text" id="admiredAccount1" name="admiredAccount1" placeholder="e.g., https://www.instagram.com/natgeo/">
+                <label for="admiredDesc1">Description:</label>
+                <input type="text" id="admiredDesc1" name="admiredDesc1" placeholder="e.g., love storytelling">
+            </div>
+        </div>
+        <button type="button" onclick="addAccount('admired')">Add Another Admired Account</button>
+        <h3>Disliked Instagram Accounts (up to 10)</h3>
+        <div id="dislikedAccounts">
+            <div class="form-group">
+                <label for="dislikedAccount1">Account 1 URL:</label>
+                <input type="text" id="dislikedAccount1" name="dislikedAccount1" placeholder="e.g., https://www.instagram.com/brandX/">
+                <label for="dislikedDesc1">Description:</label>
+                <input type="text" id="dislikedDesc1" name="dislikedDesc1" placeholder="e.g., hate clickbait">
+            </div>
+        </div>
+        <button type="button" onclick="addAccount('disliked')">Add Another Disliked Account</button>
+        <div class="form-group">
+            <label><input type="checkbox" name="consent" required> I agree to data collection for script generation</label>
+        </div>
+        <button type="submit">Submit</button>
+    </form>
+
+    <script>
+        let admiredCount = 1;
+        let dislikedCount = 1;
+
+        function addAccount(type) {
+            const container = document.getElementById(type + 'Accounts');
+            const count = type === 'admired' ? ++admiredCount : ++dislikedCount;
+            if (count > 10) {
+                alert('Maximum 10 accounts allowed.');
+                return;
+            }
+            const div = document.createElement('div');
+            div.className = 'form-group';
+            div.innerHTML = `
+                <label for="${type}Account${count}">Account ${count} URL:</label>
+                <input type="text" id="${type}Account${count}" name="${type}Account${count}" placeholder="e.g., https://www.instagram.com/username/">
+                <label for="${type}Desc${count}">Description:</label>
+                <input type="text" id="${type}Desc${count}" name="${type}Desc${count}" placeholder="e.g., reason for ${type}">
+            `;
+            container.appendChild(div);
+        }
+
+        document.getElementById('onboardingForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            const data = {
+                name: formData.get('name'),
+                instagram_username: formData.get('instagram_username'),
+                personal_details: {
+                    brandMission: formData.get('brandMission'),
+                    brandTone: formData.get('brandTone'),
+                    humorLevel: formData.get('humorLevel')
+                },
+                accounts: []
+            };
+
+            for (let i = 1; i <= admiredCount; i++) {
+                const url = formData.get(`admiredAccount${i}`);
+                const desc = formData.get(`admiredDesc${i}`);
+                if (url) {
+                    data.accounts.push({ type: 'admired', url, description: desc });
+                }
+            }
+            for (let i = 1; i <= dislikedCount; i++) {
+                const url = formData.get(`dislikedAccount${i}`);
+                const desc = formData.get(`dislikedDesc${i}`);
+                if (url) {
+                    data.accounts.push({ type: 'disliked', url, description: desc });
+                }
+            }
+
+            try {
+                const response = await fetch('https://aqlpovtwrpjvltppcgbi.supabase.co/rest/v1/Users', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxbHBvdnR3cnBqdmx0cHBjZ2JpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc0Nzg2MzYsImV4cCI6MjA2MzA1NDYzNn0.tEocJLT-Ep5-12WMIuRak8SWkEvZ_FbjKsrEkNGaHFM'
+                    },
+                    body: JSON.stringify({ name: data.name, instagram_username: data.instagram_username, personal_details: data.personal_details })
+                });
+                const user = await response.json();
+                const userId = user[0].user_id;
+
+                for (const account of data.accounts) {
+                    await fetch('https://aqlpovtwrpjvltppcgbi.supabase.co/rest/v1/Instagram_Accounts', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxbHBvdnR3cnBqdmx0cHBjZ2JpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc0Nzg2MzYsImV4cCI6MjA2MzA1NDYzNn0.tEocJLT-Ep5-12WMIuRak8SWkEvZ_FbjKsrEkNGaHFM'
+                        },
+                        body: JSON.stringify({
+                            user_id: userId,
+                            account_username: account.url.split('/').slice(-2, -1)[0],
+                            account_type: account.type,
+                            description: account.description
+                        })
+                    });
+                }
+                alert('Onboarding completed successfully!');
+            } catch (error) {
+                console.error('Error submitting form:', error);
+                alert('Error submitting form. Please try again.');
+            }
+        });
+    </script>
+</body>
+</html>
