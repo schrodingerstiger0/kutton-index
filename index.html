@@ -11,28 +11,6 @@
             margin: 0 auto;
             padding: 20px;
         }
-        .chat-container {
-            border: 1px solid #ccc;
-            padding: 10px;
-            max-height: 400px;
-            overflow-y: auto;
-            margin-bottom: 20px;
-        }
-        .chat-message {
-            margin: 10px 0;
-        }
-        .chat-message.bot {
-            background-color: #f1f1f1;
-            padding: 8px;
-            border-radius: 5px;
-        }
-        .chat-message.user {
-            background-color: #007bff;
-            color: white;
-            padding: 8px;
-            border-radius: 5px;
-            text-align: right;
-        }
         .form-group {
             margin-bottom: 15px;
         }
@@ -61,148 +39,107 @@
     <h1>Kotton - Instagram Reel Script Generator</h1>
     <h2>Login</h2>
     <p><a href="https://aqlpovtwrpjvltppcgbi.supabase.co/auth/v1/authorize?provider=google">Login with Google</a></p>
-    <h2>Onboarding Chat</h2>
-    <div class="chat-container" id="chatContainer"></div>
-    <div class="form-group">
-        <input type="text" id="chatInput" placeholder="Type your response here..." required>
-        <button onclick="sendMessage()">Send</button>
-    </div>
-    <div class="form-group">
-        <label><input type="checkbox" id="consent" required> I agree to data collection for script generation</label>
-    </div>
-    <button id="submitBtn" style="display: none;" onclick="submitOnboarding()">Submit Onboarding</button>
+    <h2>Onboarding Form</h2>
+    <form id="onboardingForm">
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+        <div class="form-group">
+            <label for="username">Your Instagram Username:</label>
+            <input type="text" id="username" name="instagram_username" placeholder="e.g., johndoe" required>
+        </div>
+        <div class="form-group">
+            <label for="brandMission">What’s your brand mission?</label>
+            <textarea id="brandMission" name="brandMission" required></textarea>
+        </div>
+        <div class="form-group">
+            <label for="brandTone">Preferred Brand Tone:</label>
+            <select id="brandTone" name="brandTone">
+                <option value="Witty">Witty</option>
+                <option value="Inspirational">Inspirational</option>
+                <option value="Raw">Raw</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="humorLevel">Rate your content’s humor level (1–5):</label>
+            <input type="number" id="humorLevel" name="humorLevel" min="1" max="5" required>
+        </div>
+        <h3>Admired Instagram Accounts (up to 10)</h3>
+        <div id="admiredAccounts">
+            <div class="form-group">
+                <label for="admiredAccount1">Account 1 URL:</label>
+                <input type="text" id="admiredAccount1" name="admiredAccount1" placeholder="e.g., https://www.instagram.com/natgeo/">
+                <label for="admiredDesc1">Description:</label>
+                <input type="text" id="admiredDesc1" name="admiredDesc1" placeholder="e.g., love storytelling">
+            </div>
+        </div>
+        <button type="button" onclick="addAccount('admired')">Add Another Admired Account</button>
+        <h3>Disliked Instagram Accounts (up to 10)</h3>
+        <div id="dislikedAccounts">
+            <div class="form-group">
+                <label for="dislikedAccount1">Account 1 URL:</label>
+                <input type="text" id="dislikedAccount1" name="dislikedAccount1" placeholder="e.g., https://www.instagram.com/brandX/">
+                <label for="dislikedDesc1">Description:</label>
+                <input type="text" id="dislikedDesc1" name="dislikedDesc1" placeholder="e.g., hate clickbait">
+            </div>
+        </div>
+        <button type="button" onclick="addAccount('disliked')">Add Another Disliked Account</button>
+        <div class="form-group">
+            <label><input type="checkbox" name="consent" required> I agree to data collection for script generation</label>
+        </div>
+        <button type="submit">Submit</button>
+    </form>
 
     <script>
-        const questions = [
-            { id: 'name', question: 'What’s your name?', type: 'text' },
-            { id: 'instagram_username', question: 'What’s your Instagram username?', type: 'text', placeholder: 'e.g., johndoe' },
-            { id: 'brandMission', question: 'What’s your brand mission?', type: 'text' },
-            { id: 'brandTone', question: 'What’s your preferred brand tone? (Witty, Inspirational, Raw, Other)', type: 'select', options: ['Witty', 'Inspirational', 'Raw', 'Other'] },
-            { id: 'humorLevel', question: 'Rate your content’s humor level (1–5):', type: 'number', min: 1, max: 5 }
-        ];
-        let currentQuestionIndex = 0;
-        const responses = {};
-        let admiredCount = 0;
-        let dislikedCount = 0;
+        let admiredCount = 1;
+        let dislikedCount = 1;
 
-        function addMessage(message, sender) {
-            const chatContainer = document.getElementById('chatContainer');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `chat-message ${sender}`;
-            messageDiv.textContent = message;
-            chatContainer.appendChild(messageDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-
-        function askQuestion() {
-            if (currentQuestionIndex < questions.length) {
-                const q = questions[currentQuestionIndex];
-                addMessage(q.question, 'bot');
-                const input = document.getElementById('chatInput');
-                input.placeholder = q.placeholder || 'Type your response here...';
-                if (q.type === 'select') {
-                    input.style.display = 'none';
-                    const select = document.createElement('select');
-                    select.id = 'chatSelect';
-                    q.options.forEach(option => {
-                        const opt = document.createElement('option');
-                        opt.value = option;
-                        opt.textContent = option;
-                        select.appendChild(opt);
-                    });
-                    document.getElementById('chatInput').parentElement.appendChild(select);
-                } else if (q.type === 'number') {
-                    input.type = 'number';
-                    input.min = q.min;
-                    input.max = q.max;
-                } else {
-                    input.type = 'text';
-                }
-            } else if (admiredCount < 10 || dislikedCount < 10) {
-                addMessage('Would you like to add an admired or disliked Instagram account? Type "admired" or "disliked" to add an account, or "done" to finish.', 'bot');
-            } else {
-                addMessage('All done! Please check the consent box and click Submit to complete onboarding.', 'bot');
-                document.getElementById('submitBtn').style.display = 'block';
-            }
-        }
-
-        async function sendMessage() {
-            const input = document.getElementById('chatInput');
-            const select = document.getElementById('chatSelect');
-            let answer = select ? select.value : input.value.trim();
-            if (!answer) return;
-
-            addMessage(answer, 'user');
-            if (currentQuestionIndex < questions.length) {
-                const q = questions[currentQuestionIndex];
-                responses[q.id] = answer;
-                currentQuestionIndex++;
-                if (select) {
-                    select.remove();
-                    input.style.display = 'block';
-                }
-                input.value = '';
-                input.type = 'text';
-                askQuestion();
-            } else if (answer.toLowerCase() === 'admired' && admiredCount < 10) {
-                admiredCount++;
-                addMessage(`Please provide the URL for admired account ${admiredCount}:`, 'bot');
-                input.placeholder = 'e.g., https://www.instagram.com/natgeo/';
-                responses[`admiredAccount${admiredCount}`] = { url: '', description: '' };
-            } else if (answer.toLowerCase() === 'disliked' && dislikedCount < 10) {
-                dislikedCount++;
-                addMessage(`Please provide the URL for disliked account ${dislikedCount}:`, 'bot');
-                input.placeholder = 'e.g., https://www.instagram.com/brandX/';
-                responses[`dislikedAccount${dislikedCount}`] = { url: '', description: '' };
-            } else if (answer.toLowerCase() === 'done') {
-                addMessage('All done! Please check the consent box and click Submit to complete onboarding.', 'bot');
-                document.getElementById('submitBtn').style.display = 'block';
-                input.value = '';
-            } else if (responses[`admiredAccount${admiredCount}`] && !responses[`admiredAccount${admiredCount}`].url) {
-                responses[`admiredAccount${admiredCount}`].url = answer;
-                addMessage(`Please provide a description for this admired account:`, 'bot');
-                input.placeholder = 'e.g., love storytelling';
-            } else if (responses[`admiredAccount${admiredCount}`] && !responses[`admiredAccount${admiredCount}`].description) {
-                responses[`admiredAccount${admiredCount}`].description = answer;
-                addMessage('Would you like to add another admired or disliked account? Type "admired", "disliked", or "done".', 'bot');
-                input.placeholder = 'Type your response here...';
-            } else if (responses[`dislikedAccount${dislikedCount}`] && !responses[`dislikedAccount${dislikedCount}`].url) {
-                responses[`dislikedAccount${dislikedCount}`].url = answer;
-                addMessage(`Please provide a description for this disliked account:`, 'bot');
-                input.placeholder = 'e.g., hate clickbait';
-            } else if (responses[`dislikedAccount${dislikedCount}`] && !responses[`dislikedAccount${dislikedCount}`].description) {
-                responses[`dislikedAccount${dislikedCount}`].description = answer;
-                addMessage('Would you like to add another admired or disliked account? Type "admired", "disliked", or "done".', 'bot');
-                input.placeholder = 'Type your response here...';
-            }
-            input.value = '';
-        }
-
-        async function submitOnboarding() {
-            if (!document.getElementById('consent').checked) {
-                alert('Please agree to data collection before submitting.');
+        function addAccount(type) {
+            const container = document.getElementById(type + 'Accounts');
+            const count = type === 'admired' ? ++admiredCount : ++dislikedCount;
+            if (count > 10) {
+                alert('Maximum 10 accounts allowed.');
                 return;
             }
+            const div = document.createElement('div');
+            div.className = 'form-group';
+            div.innerHTML = `
+                <label for="${type}Account${count}">Account ${count} URL:</label>
+                <input type="text" id="${type}Account${count}" name="${type}Account${count}" placeholder="e.g., https://www.instagram.com/username/">
+                <label for="${type}Desc${count}">Description:</label>
+                <input type="text" id="${type}Desc${count}" name="${type}Desc${count}" placeholder="e.g., reason for ${type}">
+            `;
+            container.appendChild(div);
+        }
 
+        document.getElementById('onboardingForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
             const data = {
-                name: responses.name,
-                instagram_username: responses.instagram_username,
+                name: formData.get('name'),
+                instagram_username: formData.get('instagram_username'),
                 personal_details: {
-                    brandMission: responses.brandMission,
-                    brandTone: responses.brandTone,
-                    humorLevel: responses.humorLevel
+                    brandMission: formData.get('brandMission'),
+                    brandTone: formData.get('brandTone'),
+                    humorLevel: formData.get('humorLevel')
                 },
                 accounts: []
             };
 
             for (let i = 1; i <= admiredCount; i++) {
-                if (responses[`admiredAccount${i}`]) {
-                    data.accounts.push({ type: 'admired', url: responses[`admiredAccount${i}`].url, description: responses[`admiredAccount${i}`].description });
+                const url = formData.get(`admiredAccount${i}`);
+                const desc = formData.get(`admiredDesc${i}`);
+                if (url) {
+                    data.accounts.push({ type: 'admired', url, description: desc });
                 }
             }
             for (let i = 1; i <= dislikedCount; i++) {
-                if (responses[`dislikedAccount${i}`]) {
-                    data.accounts.push({ type: 'disliked', url: responses[`dislikedAccount${i}`].url, description: responses[`dislikedAccount${i}`].description });
+                const url = formData.get(`dislikedAccount${i}`);
+                const desc = formData.get(`dislikedDesc${i}`);
+                if (url) {
+                    data.accounts.push({ type: 'disliked', url, description: desc });
                 }
             }
 
@@ -238,9 +175,7 @@
                 console.error('Error submitting form:', error);
                 alert('Error submitting form. Please try again.');
             }
-        }
-
-        askQuestion();
+        });
     </script>
 </body>
 </html>
