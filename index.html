@@ -37,9 +37,6 @@
 </head>
 <body>
     <h1>Kotton - Instagram Reel Script Generator</h1>
-    <!-- Temporarily commented out Google OAuth login link due to redirect_uri_mismatch error -->
-    <!-- <h2>Login</h2> -->
-    <!-- <p><a href="https://aqlpovtwrpjvltppcgbi.supabase.co/auth/v1/authorize?provider=google&redirect_to=https://aqlpovtwrpjvltppcgbi.supabase.co/auth/v1/callback">Login with Google</a></p> -->
     <h2>Onboarding Form</h2>
     <form id="onboardingForm" action="javascript:void(0);">
         <div class="form-group">
@@ -183,7 +180,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                         'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxbHBvdnR3cnBqdmx0cHBjZ2JpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc0Nzg2MzYsImV4cCI6MjA2MzA1NDYzNn0.tEocJLT-Ep5-12WMIuRak8SWkEvZ_FbjKsrEkNGaHFM',
-                        'Prefer': 'return=representation' // Ensure Supabase returns the inserted row
+                        'Prefer': 'return=representation'
                     },
                     body: JSON.stringify({ name: data.name, instagram_username: data.instagram_username, personal_details: data.personal_details })
                 });
@@ -210,7 +207,7 @@
                     user = userText ? JSON.parse(userText) : [];
                 } catch (e) {
                     console.error('Failed to parse users response:', e, 'Raw response:', userText);
-                    user = []; // Default to empty array to continue
+                    user = [];
                 }
                 console.log('User insert response:', user);
 
@@ -225,6 +222,27 @@
                 console.error('Error during users insert:', error);
                 alert('Error submitting user data: ' + error.message);
                 throw error;
+            }
+
+            // Notify Make.com webhook with the userId
+            try {
+                console.log('Notifying Make.com webhook with userId:', userId);
+                const webhookResponse = await fetch('https://hook.eu2.make.com/fkrr9a1dejsxdzfj2ojwkse7flhyxrh3', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ userId: userId })
+                });
+
+                if (!webhookResponse.ok) {
+                    throw new Error('Failed to notify Make.com webhook: ' + webhookResponse.statusText);
+                }
+
+                console.log('Webhook notified successfully:', await webhookResponse.text());
+            } catch (error) {
+                console.error('Error notifying Make.com webhook:', error);
+                alert('Error notifying scraping service: ' + error.message);
             }
 
             try {
@@ -278,7 +296,7 @@
                         console.log('Account insert response:', parsedAccountResult);
                     }
                 }
-                alert('Onboarding completed successfully!');
+                alert('Onboarding completed successfully! Data scraping has been triggered.');
             } catch (error) {
                 console.error('Error during instagram_accounts insert:', error);
                 alert('Error submitting account data: ' + error.message);
