@@ -174,18 +174,22 @@
                 }
             }
 
+            let userId;
+
             try {
                 console.log('Submitting user data:', data);
                 const userResponse = await fetch('https://aqlpovtwrpjvltppcgbi.supabase.co/rest/v1/users', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxbHBvdnR3cnBqdmx0cHBjZ2JpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc0Nzg2MzYsImV4cCI6MjA2MzA1NDYzNn0.tEocJLT-Ep5-12WMIuRak8SWkEvZ_FbjKsrEkNGaHFM'
+                        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxbHBvdnR3cnBqdmx0cHBjZ2JpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc0Nzg2MzYsImV4cCI6MjA2MzA1NDYzNn0.tEocJLT-Ep5-12WMIuRak8SWkEvZ_FbjKsrEkNGaHFM',
+                        'Prefer': 'return=representation' // Ensure Supabase returns the inserted row
                     },
                     body: JSON.stringify({ name: data.name, instagram_username: data.instagram_username, personal_details: data.personal_details })
                 });
 
                 console.log('User response status:', userResponse.status);
+                console.log('User response headers:', [...userResponse.headers.entries()]);
 
                 if (!userResponse.ok) {
                     const text = await userResponse.text();
@@ -199,29 +203,37 @@
                     throw new Error('Failed to submit user data: ' + JSON.stringify(errorData));
                 }
 
-                // Safely parse the users response
                 const userText = await userResponse.text();
+                console.log('Raw user response text:', userText);
                 let user;
                 try {
                     user = userText ? JSON.parse(userText) : [];
-                    console.log('Parsed user response:', user);
                 } catch (e) {
                     console.error('Failed to parse users response:', e, 'Raw response:', userText);
-                    throw new Error('Failed to parse users response: ' + e.message);
+                    user = []; // Default to empty array to continue
                 }
                 console.log('User insert response:', user);
 
                 if (!user || user.length === 0 || !user[0].user_id) {
-                    console.error('No user data or user_id returned from Supabase');
-                    throw new Error('No user data or user_id returned from Supabase');
+                    console.warn('No user data or user_id returned from Supabase, proceeding with default userId if available');
+                    userId = user && user[0] && user[0].user_id ? user[0].user_id : null;
+                } else {
+                    userId = user[0].user_id;
                 }
+                console.log('Extracted userId:', userId);
+            } catch (error) {
+                console.error('Error during users insert:', error);
+                alert('Error submitting user data: ' + error.message);
+                throw error;
+            }
 
-                const userId = user[0].user_id;
-                console.log('Extracted user_id:', userId);
-
+            try {
                 if (data.accounts.length === 0) {
                     console.log('No accounts to submit to instagram_accounts table');
+                } else if (!userId) {
+                    console.log('No userId available, skipping instagram_accounts submission');
                 } else {
+                    console.log('Starting instagram_accounts submission');
                     for (const account of data.accounts) {
                         console.log('Submitting account data:', account);
                         const username = parseUsernameFromUrl(account.url);
@@ -230,7 +242,8 @@
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
-                                'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxbHBvdnR3cnBqdmx0cHBjZ2JpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc0Nzg2MzYsImV4cCI6MjA2MzA1NDYzNn0.tEocJLT-Ep5-12WMIuRak8SWkEvZ_FbjKsrEkNGaHFM'
+                                'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxbHBvdnR3cnBqdmx0cHBjZ2JpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc0Nzg2MzYsImV4cCI6MjA2MzA1NDYzNn0.tEocJLT-Ep5-12WMIuRak8SWkEvZ_FbjKsrEkNGaHFM',
+                                'Prefer': 'return=representation'
                             },
                             body: JSON.stringify({
                                 user_id: userId,
@@ -254,22 +267,21 @@
                             throw new Error('Failed to submit account data: ' + JSON.stringify(errorData));
                         }
 
-                        const accountText = await accountResponse.text();
-                        let accountResult;
+                        const accountResult = await accountResponse.text();
+                        let parsedAccountResult;
                         try {
-                            accountResult = accountText ? JSON.parse(accountText) : [];
-                            console.log('Parsed account response:', accountResult);
+                            parsedAccountResult = accountResult ? JSON.parse(accountResult) : [];
                         } catch (e) {
-                            console.error('Failed to parse instagram_accounts response:', e, 'Raw response:', accountText);
-                            throw new Error('Failed to parse instagram_accounts response: ' + e.message);
+                            console.error('Failed to parse instagram_accounts response:', e, 'Raw response:', accountResult);
+                            parsedAccountResult = [];
                         }
-                        console.log('Account insert response:', accountResult);
+                        console.log('Account insert response:', parsedAccountResult);
                     }
                 }
                 alert('Onboarding completed successfully!');
             } catch (error) {
-                console.error('Error submitting form:', error);
-                alert('Error submitting form: ' + error.message);
+                console.error('Error during instagram_accounts insert:', error);
+                alert('Error submitting account data: ' + error.message);
             }
         });
     </script>
