@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kotton - Instagram Reel Script Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Kotton - Instagram Reel Script Generator</h1>
+    <h2>Login</h2>
+    <p><a href="https://aqlpovtwrpjvltppcgbi.supabase.co/auth/v1/authorize?provider=google">Login with Google</a></p>
+    <h2>Onboarding Form</h2>
+    <form id="onboardingForm">
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+        <div class="form-group">
+            <label for="username">Your Instagram Username:</label>
+            <input type="text" id="username" name="instagram_username" placeholder="e.g., johndoe" required>
+        </div>
+        <div class="form-group">
+            <label for="brandMission">What’s your brand mission?</label>
+            <textarea id="brandMission" name="brandMission" required></textarea>
+        </div>
+        <div class="form-group">
+            <label for="brandTone">Preferred Brand Tone:</label>
+            <select id="brandTone" name="brandTone">
+                <option value="Witty">Witty</option>
+                <option value="Inspirational">Inspirational</option>
+                <option value="Raw">Raw</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="humorLevel">Rate your content’s humor level (1–5):</label>
+            <input type="number" id="humorLevel" name="humorLevel" min="1" max="5" required>
+        </div>
+        <h3>Admired Instagram Accounts (up to 10)</h3>
+        <div id="admiredAccounts">
+            <div class="form-group">
+                <label for="admiredAccount1">Account 1 URL:</label>
+                <input type="text" id="admiredAccount1" name="admiredAccount1" placeholder="e.g., https://www.instagram.com/natgeo/">
+                <label for="admiredDesc1">Description:</label>
+                <input type="text" id="admiredDesc1" name="admiredDesc1" placeholder="e.g., love storytelling">
+            </div>
+        </div>
+        <button type="button" onclick="addAccount('admired')">Add Another Admired Account</button>
+        <h3>Disliked Instagram Accounts (up to 10)</h3>
+        <div id="dislikedAccounts">
+            <div class="form-group">
+                <label for="dislikedAccount1">Account 1 URL:</label>
+                <input type="text" id="dislikedAccount1" name="dislikedAccount1" placeholder="e.g., https://www.instagram.com/brandX/">
+                <label for="dislikedDesc1">Description:</label>
+                <input type="text" id="dislikedDesc1" name="dislikedDesc1" placeholder="e.g., hate clickbait">
+            </div>
+        </div>
+        <button type="button" onclick="addAccount('disliked')">Add Another Disliked Account</button>
+        <div class="form-group">
+            <label><input type="checkbox" name="consent" required> I agree to data collection for script generation</label>
+        </
