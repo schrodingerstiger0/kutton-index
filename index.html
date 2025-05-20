@@ -117,25 +117,6 @@
             container.appendChild(div);
         }
 
-        // Function to safely parse a username from a URL
-        function parseUsernameFromUrl(url) {
-            if (!url) return '';
-            try {
-                const parts = url.split('/');
-                const usernameIndex = parts.findIndex(part => part === 'instagram.com') + 1;
-                if (usernameIndex > 0 && usernameIndex < parts.length) {
-                    let username = parts[usernameIndex];
-                    username = username.split('?')[0];
-                    return username || '';
-                }
-                const nonEmptyParts = parts.filter(part => part);
-                return nonEmptyParts.length > 0 ? nonEmptyParts[nonEmptyParts.length - 1].split('?')[0] : '';
-            } catch (e) {
-                console.error('Error parsing username from URL:', url, e);
-                return '';
-            }
-        }
-
         document.getElementById('onboardingForm').addEventListener('submit', async function(event) {
             console.log('Form submission event triggered!');
             event.preventDefault();
@@ -254,8 +235,6 @@
                     console.log('Starting instagram_accounts submission');
                     for (const account of data.accounts) {
                         console.log('Submitting account data:', account);
-                        const username = parseUsernameFromUrl(account.url);
-                        console.log('Parsed username:', username);
                         const accountResponse = await fetch('https://aqlpovtwrpjvltppcgbi.supabase.co/rest/v1/instagram_accounts', {
                             method: 'POST',
                             headers: {
@@ -265,7 +244,7 @@
                             },
                             body: JSON.stringify({
                                 user_id: userId,
-                                account_username: username,
+                                account_username: account.url,
                                 account_type: account.type,
                                 description: account.description
                             })
