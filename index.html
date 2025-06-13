@@ -1,286 +1,305 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kotton - Instagram Reel Script Generator</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-        }
-        input, select, textarea {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
-        }
-        button {
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kotton Instagram Reel Script Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f4f4f4;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    form {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    label {
+      display: block;
+      margin: 10px 0 5px;
+      font-weight: bold;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .account-group {
+      margin: 20px 0;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #28a745;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+    #check-name-button {
+      background-color: #ffc107;
+    }
+    #check-name-button:hover {
+      background-color: #e0a800;
+    }
+    #chat-button {
+      background-color: #007bff;
+    }
+    #chat-button:hover {
+      background-color: #0056b3;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
 </head>
 <body>
-    <h1>Kotton - Instagram Reel Script Generator</h1>
-    <h2>Onboarding Form</h2>
-    <form id="onboardingForm" action="javascript:void(0);">
-        <div class="form-group">
-            <label for="name">Name:</label>
-            <input type="text" id="name" name="name" required>
-        </div>
-        <div class="form-group">
-            <label for="username">Your Instagram Profile URL:</label>
-            <input type="text" id="username" name="instagram_username" placeholder="e.g., https://www.instagram.com/johndoe/" required>
-        </div>
-        <div class="form-group">
-            <label for="brandMission">What’s your brand mission?</label>
-            <textarea id="brandMission" name="brandMission" required></textarea>
-        </div>
-        <div class="form-group">
-            <label for="brandTone">Preferred Brand Tone:</label>
-            <select id="brandTone" name="brandTone">
-                <option value="Witty">Witty</option>
-                <option value="Inspirational">Inspirational</option>
-                <option value="Raw">Raw</option>
-                <option value="Other">Other</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="humorLevel">Rate your content’s humor level (1–5):</label>
-            <input type="number" id="humorLevel" name="humorLevel" min="1" max="5" required>
-        </div>
-        <h3>Admired Instagram Accounts (up to 10)</h3>
-        <div id="admiredAccounts">
-            <div class="form-group">
-                <label for="admiredAccount1">Account 1 URL:</label>
-                <input type="text" id="admiredAccount1" name="admiredAccount1" placeholder="e.g., https://www.instagram.com/natgeo/">
-                <label for="admiredDesc1">Description:</label>
-                <input type="text" id="admiredDesc1" name="admiredDesc1" placeholder="e.g., love storytelling">
-            </div>
+  <h1>Kotton Instagram Reel Script Generator</h1>
+  <form id="user-form">
+    <label for="name">Name <span style="color: red;">*</span></label>
+    <input type="text" id="name" name="name" required>
+
+    <button type="button" id="check-name-button" onclick="checkName()">Check Name</button>
+
+    <div id="new-user-fields" class="hidden">
+      <label for="instagram_username">Instagram Profile URL</label>
+      <input type="url" id="instagram_username" name="instagram_username" placeholder="https://www.instagram.com/yourusername/">
+
+      <label for="brand_mission">Brand Mission</label>
+      <textarea id="brand_mission" name="brand_mission"></textarea>
+
+      <label for="brand_tone">Brand Tone</label>
+      <select id="brand_tone" name="brand_tone">
+        <option value="">Select Tone</option>
+        <option value="Witty">Witty</option>
+        <option value="Inspirational">Inspirational</option>
+        <option value="Raw">Raw</option>
+        <option value="Other">Other</option>
+      </select>
+
+      <label for="humor_level">Humor Level (1–5)</label>
+      <input type="number" id="humor_level" name="humor_level" min="1" max="5">
+
+      <div id="admired-accounts" class="account-group">
+        <h3>Admired Accounts (up to 10)</h3>
+        <div class="account-entry">
+          <label>Account URL</label>
+          <input type="url" name="admired_url[]" placeholder="https://www.instagram.com/username/">
+          <label>Description</label>
+          <textarea name="admired_description[]"></textarea>
         </div>
         <button type="button" onclick="addAccount('admired')">Add Another Admired Account</button>
-        <h3>Disliked Instagram Accounts (up to 10)</h3>
-        <div id="dislikedAccounts">
-            <div class="form-group">
-                <label for="dislikedAccount1">Account 1 URL:</label>
-                <input type="text" id="dislikedAccount1" name="dislikedAccount1" placeholder="e.g., https://www.instagram.com/brandX/">
-                <label for="dislikedDesc1">Description:</label>
-                <input type="text" id="dislikedDesc1" name="dislikedDesc1" placeholder="e.g., hate clickbait">
-            </div>
+      </div>
+
+      <div id="disliked-accounts" class="account-group">
+        <h3>Disliked Accounts (up to 10)</h3>
+        <div class="account-entry">
+          <label>Account URL</label>
+          <input type="url" name="disliked_url[]" placeholder="https://www.instagram.com/username/">
+          <label>Description</label>
+          <textarea name="disliked_description[]"></textarea>
         </div>
         <button type="button" onclick="addAccount('disliked')">Add Another Disliked Account</button>
-        <div class="form-group">
-            <label><input type="checkbox" name="consent" required> I agree to data collection for script generation</label>
-        </div>
-        <button type="submit">Submit</button>
-    </form>
+      </div>
 
-    <script>
-        console.log('JavaScript loaded successfully!');
+      <label for="consent">I consent to data collection and scraping</label>
+      <input type="checkbox" id="consent" name="consent">
+    </div>
 
-        let admiredCount = 1;
-        let dislikedCount = 1;
+    <button type="submit" id="submit-button" class="hidden">Submit</button>
+    <button type="button" id="chat-button" disabled onclick="goToChat()">Chat</button>
+  </form>
 
-        function addAccount(type) {
-            const container = document.getElementById(type + 'Accounts');
-            const count = type === 'admired' ? ++admiredCount : ++dislikedCount;
-            console.log(`Adding ${type} account, count: ${count}`);
-            if (count > 10) {
-                alert('Maximum 10 accounts allowed.');
-                if (type === 'admired') admiredCount--;
-                else dislikedCount--;
-                return;
-            }
-            const div = document.createElement('div');
-            div.className = 'form-group';
-            div.innerHTML = `
-                <label for="${type}Account${count}">Account ${count} URL:</label>
-                <input type="text" id="${type}Account${count}" name="${type}Account${count}" placeholder="e.g., https://www.instagram.com/username/">
-                <label for="${type}Desc${count}">Description:</label>
-                <input type="text" id="${type}Desc${count}" name="${type}Desc${count}" placeholder="e.g., reason for ${type}">
-            `;
-            container.appendChild(div);
+  <script>
+    const SUPABASE_URL = 'https://aqlpovtwrpjvltppcgbi.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxbHBvdnR3cnBqdmx0cHBjZ2JpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc0Nzg2MzYsImV4cCI6MjA2MzA1NDYzNn0.tEocJLT-Ep5-12WMIuRak8SWkEvZ_FbjKsrEkNGaHFM';
+    const MAKE_WEBHOOK = 'https://hook.eu2.make.com/fkrr9a1dejsxdzfj2ojwkse7flhyxrh3';
+
+    async function checkName() {
+      const name = document.getElementById('name').value.trim();
+      if (!name) {
+        alert('Please enter your name.');
+        return;
+      }
+
+      // Query Supabase for existing user
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/users?select=user_id,name&name=eq.${encodeURIComponent(name)}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'apikey': SUPABASE_ANON_KEY
         }
+      });
 
-        document.getElementById('onboardingForm').addEventListener('submit', async function(event) {
-            console.log('Form submission event triggered!');
-            event.preventDefault();
-            const formData = new FormData(this);
-            const data = {
-                name: formData.get('name'),
-                instagram_username: formData.get('instagram_username'),
-                personal_details: {
-                    brandMission: formData.get('brandMission'),
-                    brandTone: formData.get('brandTone'),
-                    humorLevel: formData.get('humorLevel')
-                },
-                accounts: []
-            };
+      if (!response.ok) {
+        alert('Error checking name. Please try again.');
+        return;
+      }
 
-            console.log('FormData entries:', [...formData.entries()]);
+      const users = await response.json();
+      const chatButton = document.getElementById('chat-button');
+      const newUserFields = document.getElementById('new-user-fields');
+      const submitButton = document.getElementById('submit-button');
 
-            for (let i = 1; i <= admiredCount; i++) {
-                const url = formData.get(`admiredAccount${i}`);
-                const desc = formData.get(`admiredDesc${i}`);
-                console.log(`Admired account ${i}: url=${url}, desc=${desc}`);
-                if (url || desc) {
-                    data.accounts.push({ type: 'admired', url: url || '', description: desc || '' });
-                }
-            }
-
-            for (let i = 1; i <= dislikedCount; i++) {
-                const url = formData.get(`dislikedAccount${i}`);
-                const desc = formData.get(`dislikedDesc${i}`);
-                console.log(`Disliked account ${i}: url=${url}, desc=${desc}`);
-                if (url || desc) {
-                    data.accounts.push({ type: 'disliked', url: url || '', description: desc || '' });
-                }
-            }
-
-            let userId;
-
-            try {
-                console.log('Submitting user data:', data);
-                const userResponse = await fetch('https://aqlpovtwrpjvltppcgbi.supabase.co/rest/v1/users', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxbHBvdnR3cnBqdmx0cHBjZ2JpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc0Nzg2MzYsImV4cCI6MjA2MzA1NDYzNn0.tEocJLT-Ep5-12WMIuRak8SWkEvZ_FbjKsrEkNGaHFM',
-                        'Prefer': 'return=representation'
-                    },
-                    body: JSON.stringify({ name: data.name, instagram_username: data.instagram_username, personal_details: data.personal_details })
-                });
-
-                console.log('User response status:', userResponse.status);
-                console.log('User response headers:', [...userResponse.headers.entries()]);
-
-                if (!userResponse.ok) {
-                    const text = await userResponse.text();
-                    let errorData;
-                    try {
-                        errorData = text ? JSON.parse(text) : { message: 'Empty response from Supabase', status: userResponse.status };
-                    } catch (e) {
-                        errorData = { message: 'Failed to parse response', rawText: text, status: userResponse.status };
-                    }
-                    console.error('Supabase API error (users):', errorData);
-                    throw new Error('Failed to submit user data: ' + JSON.stringify(errorData));
-                }
-
-                const userText = await userResponse.text();
-                console.log('Raw user response text:', userText);
-                let user;
-                try {
-                    user = userText ? JSON.parse(userText) : [];
-                } catch (e) {
-                    console.error('Failed to parse users response:', e, 'Raw response:', userText);
-                    user = [];
-                }
-                console.log('User insert response:', user);
-
-                if (!user || user.length === 0 || !user[0].user_id) {
-                    console.warn('No user data or user_id returned from Supabase, proceeding with default userId if available');
-                    userId = user && user[0] && user[0].user_id ? user[0].user_id : null;
-                } else {
-                    userId = user[0].user_id;
-                }
-                console.log('Extracted userId:', userId);
-            } catch (error) {
-                console.error('Error during users insert:', error);
-                alert('Error submitting user data: ' + error.message);
-                throw error;
-            }
-
-            // Notify Make.com webhook with the userId
-            try {
-                console.log('Notifying Make.com webhook with userId:', userId);
-                const webhookResponse = await fetch('https://hook.eu2.make.com/fkrr9a1dejsxdzfj2ojwkse7flhyxrh3', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ userId: userId })
-                });
-
-                if (!webhookResponse.ok) {
-                    throw new Error('Failed to notify Make.com webhook: ' + webhookResponse.statusText);
-                }
-
-                console.log('Webhook notified successfully:', await webhookResponse.text());
-            } catch (error) {
-                console.error('Error notifying Make.com webhook:', error);
-                alert('Error notifying scraping service: ' + error.message);
-            }
-
-            try {
-                if (data.accounts.length === 0) {
-                    console.log('No accounts to submit to instagram_accounts table');
-                } else if (!userId) {
-                    console.log('No userId available, skipping instagram_accounts submission');
-                } else {
-                    console.log('Starting instagram_accounts submission');
-                    for (const account of data.accounts) {
-                        console.log('Submitting account data:', account);
-                        const accountResponse = await fetch('https://aqlpovtwrpjvltppcgbi.supabase.co/rest/v1/instagram_accounts', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxbHBvdnR3cnBqdmx0cHBjZ2JpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc0Nzg2MzYsImV4cCI6MjA2MzA1NDYzNn0.tEocJLT-Ep5-12WMIuRak8SWkEvZ_FbjKsrEkNGaHFM',
-                                'Prefer': 'return=representation'
-                            },
-                            body: JSON.stringify({
-                                user_id: userId,
-                                account_username: account.url,
-                                account_type: account.type,
-                                description: account.description
-                            })
-                        });
-
-                        console.log('Instagram accounts response status:', accountResponse.status);
-
-                        if (!accountResponse.ok) {
-                            const text = await accountResponse.text();
-                            let errorData;
-                            try {
-                                errorData = text ? JSON.parse(text) : { message: 'Empty response from Supabase', status: accountResponse.status };
-                            } catch (e) {
-                                errorData = { message: 'Failed to parse response', rawText: text, status: accountResponse.status };
-                            }
-                            console.error('Supabase API error (instagram_accounts):', errorData);
-                            throw new Error('Failed to submit account data: ' + JSON.stringify(errorData));
-                        }
-
-                        const accountResult = await accountResponse.text();
-                        let parsedAccountResult;
-                        try {
-                            parsedAccountResult = accountResult ? JSON.parse(accountResult) : [];
-                        } catch (e) {
-                            console.error('Failed to parse instagram_accounts response:', e, 'Raw response:', accountResult);
-                            parsedAccountResult = [];
-                        }
-                        console.log('Account insert response:', parsedAccountResult);
-                    }
-                }
-                alert('Onboarding completed successfully! Data scraping has been triggered.');
-            } catch (error) {
-                console.error('Error during instagram_accounts insert:', error);
-                alert('Error submitting account data: ' + error.message);
-            }
+      if (users.length === 1) {
+        // Single match found
+        chatButton.disabled = false;
+        chatButton.dataset.userId = users[0].user_id;
+        newUserFields.classList.add('hidden');
+        submitButton.classList.add('hidden');
+        alert(`Welcome back, ${name}! Click Chat to share more about yourself.`);
+      } else if (users.length > 1) {
+        // Multiple matches (rare)
+        alert('Multiple users found with this name. Please enter your Instagram URL to confirm your identity.');
+        newUserFields.classList.remove('hidden');
+        newUserFields.querySelector('#instagram_username').required = true;
+        submitButton.classList.remove('hidden');
+      } else {
+        // No match
+        alert('No account found. Please fill out the full form for a new account.');
+        newUserFields.classList.remove('hidden');
+        submitButton.classList.remove('hidden');
+        newUserFields.querySelectorAll('input, select, textarea').forEach(field => {
+          if (field.id !== 'name') field.required = true;
         });
-    </script>
+      }
+    }
+
+    function addAccount(type) {
+      const container = document.getElementById(`${type}-accounts`);
+      const entry = document.createElement('div');
+      entry.className = 'account-entry';
+      entry.innerHTML = `
+        <label>Account URL</label>
+        <input type="url" name="${type}_url[]" placeholder="https://www.instagram.com/username/">
+        <label>Description</label>
+        <textarea name="${type}_description[]"></textarea>
+      `;
+      container.insertBefore(entry, container.lastElementChild);
+    }
+
+    document.getElementById('user-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const name = formData.get('name');
+      const instagramUsername = formData.get('instagram_username');
+      const chatButton = document.getElementById('chat-button');
+
+      // Check if user already exists (for multiple name matches)
+      const checkResponse = await fetch(`${SUPABASE_URL}/rest/v1/users?select=user_id,name&name=eq.${encodeURIComponent(name)}&instagram_username=eq.${encodeURIComponent(instagramUsername)}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'apikey': SUPABASE_ANON_KEY
+        }
+      });
+
+      if (checkResponse.ok) {
+        const existingUsers = await checkResponse.json();
+        if (existingUsers.length === 1) {
+          chatButton.disabled = false;
+          chatButton.dataset.userId = existingUsers[0].user_id;
+          alert(`Welcome back, ${name}! Click Chat to continue.`);
+          return;
+        }
+      }
+
+      // New user submission
+      const personalDetails = {
+        brandMission: formData.get('brand_mission') || '',
+        brandTone: formData.get('brand_tone') || '',
+        humorLevel: parseInt(formData.get('humor_level')) || null
+      };
+
+      // Submit to users table
+      const userResponse = await fetch(`${SUPABASE_URL}/rest/v1/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'apikey': SUPABASE_ANON_KEY
+        },
+        body: JSON.stringify({
+          name,
+          instagram_username: instagramUsername || '',
+          personal_details: personalDetails
+        })
+      });
+
+      if (!userResponse.ok) {
+        alert('Error saving user data');
+        return;
+      }
+
+      const userData = await userResponse.json();
+      const userId = userData[0].user_id;
+
+      // Submit admired/disliked accounts
+      const admiredUrls = formData.getAll('admired_url[]');
+      const admiredDescriptions = formData.getAll('admired_description[]');
+      const dislikedUrls = formData.getAll('disliked_url[]');
+      const dislikedDescriptions = formData.getAll('disliked_description[]');
+
+      const accounts = [];
+      admiredUrls.forEach((url, i) => {
+        if (url) accounts.push({ user_id: userId, account_username: url, account_type: 'admired', description: admiredDescriptions[i] || '' });
+      });
+      dislikedUrls.forEach((url, i) => {
+        if (url) accounts.push({ user_id: userId, account_username: url, account_type: 'disliked', description: dislikedDescriptions[i] || '' });
+      });
+
+      if (accounts.length > 0) {
+        const accountsResponse = await fetch(`${SUPABASE_URL}/rest/v1/instagram_accounts`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'apikey': SUPABASE_ANON_KEY
+          },
+          body: JSON.stringify(accounts)
+        });
+
+        if (!accountsResponse.ok) {
+          alert('Error saving accounts');
+          return;
+        }
+      }
+
+      // Trigger Make.com webhook
+      await fetch(MAKE_WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId })
+      });
+
+      // Enable Chat button
+      chatButton.disabled = false;
+      chatButton.dataset.userId = userId;
+      alert('Form submitted successfully! Click Chat to share more about yourself.');
+    });
+
+    function goToChat() {
+      const userId = document.getElementById('chat-button').dataset.userId;
+      window.location.href = `chatbot.html?userId=${userId}`;
+    }
+  </script>
 </body>
 </html>
