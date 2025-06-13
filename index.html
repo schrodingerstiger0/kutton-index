@@ -52,135 +52,75 @@
     button:hover {
       background-color: #218838;
     }
-    #check-name-button {
+    a#old-user-button {
       background-color: #ffc107;
+      color: black;
+      padding: 10px 20px;
+      border-radius: 4px;
+      text-decoration: none;
+      display: inline-block;
     }
-    #check-name-button:hover {
+    a#old-user-button:hover {
       background-color: #e0a800;
-    }
-    #chat-button {
-      background-color: #007bff;
-    }
-    #chat-button:hover {
-      background-color: #0056b3;
-    }
-    .hidden {
-      display: none;
     }
   </style>
 </head>
 <body>
   <h1>Kotton Instagram Reel Script Generator</h1>
   <form id="user-form">
-    <label for="name">Name <span style="color: red;">*</span></label>
+    <label for="name">Name</label>
     <input type="text" id="name" name="name" required>
 
-    <button type="button" id="check-name-button" onclick="checkName()">Check Name</button>
+    <label for="instagram_username">Instagram Profile URL</label>
+    <input type="url" id="instagram_username" name="instagram_username" placeholder="https://www.instagram.com/yourusername/" required>
 
-    <div id="new-user-fields" class="hidden">
-      <label for="instagram_username">Instagram Profile URL</label>
-      <input type="url" id="instagram_username" name="instagram_username" placeholder="https://www.instagram.com/yourusername/">
+    <label for="brand_mission">Brand Mission</label>
+    <textarea id="brand_mission" name="brand_mission" required></textarea>
 
-      <label for="brand_mission">Brand Mission</label>
-      <textarea id="brand_mission" name="brand_mission"></textarea>
+    <label for="brand_tone">Brand Tone</label>
+    <select id="brand_tone" name="brand_tone" required>
+      <option value="Witty">Witty</option>
+      <option value="Inspirational">Inspirational</option>
+      <option value="Raw">Raw</option>
+      <option value="Other">Other</option>
+    </select>
 
-      <label for="brand_tone">Brand Tone</label>
-      <select id="brand_tone" name="brand_tone">
-        <option value="">Select Tone</option>
-        <option value="Witty">Witty</option>
-        <option value="Inspirational">Inspirational</option>
-        <option value="Raw">Raw</option>
-        <option value="Other">Other</option>
-      </select>
+    <label for="humor_level">Humor Level (1–5)</label>
+    <input type="number" id="humor_level" name="humor_level" min="1" max="5" required>
 
-      <label for="humor_level">Humor Level (1–5)</label>
-      <input type="number" id="humor_level" name="humor_level" min="1" max="5">
-
-      <div id="admired-accounts" class="account-group">
-        <h3>Admired Accounts (up to 10)</h3>
-        <div class="account-entry">
-          <label>Account URL</label>
-          <input type="url" name="admired_url[]" placeholder="https://www.instagram.com/username/">
-          <label>Description</label>
-          <textarea name="admired_description[]"></textarea>
-        </div>
-        <button type="button" onclick="addAccount('admired')">Add Another Admired Account</button>
+    <div id="admired-accounts" class="account-group">
+      <h3>Admired Accounts (up to 10)</h3>
+      <div class="account-entry">
+        <label>Account URL</label>
+        <input type="url" name="admired_url[]" placeholder="https://www.instagram.com/username/">
+        <label>Description</label>
+        <textarea name="admired_description[]"></textarea>
       </div>
-
-      <div id="disliked-accounts" class="account-group">
-        <h3>Disliked Accounts (up to 10)</h3>
-        <div class="account-entry">
-          <label>Account URL</label>
-          <input type="url" name="disliked_url[]" placeholder="https://www.instagram.com/username/">
-          <label>Description</label>
-          <textarea name="disliked_description[]"></textarea>
-        </div>
-        <button type="button" onclick="addAccount('disliked')">Add Another Disliked Account</button>
-      </div>
-
-      <label for="consent">I consent to data collection and scraping</label>
-      <input type="checkbox" id="consent" name="consent">
+      <button type="button" onclick="addAccount('admired')">Add Another Admired Account</button>
     </div>
 
-    <button type="submit" id="submit-button" class="hidden">Submit</button>
-    <button type="button" id="chat-button" disabled onclick="goToChat()">Chat</button>
+    <div id="disliked-accounts" class="account-group">
+      <h3>Disliked Accounts (up to 10)</h3>
+      <div class="account-entry">
+        <label>Account URL</label>
+        <input type="url" name="disliked_url[]" placeholder="https://www.instagram.com/username/">
+        <label>Description</label>
+        <textarea name="disliked_description[]"></textarea>
+      </div>
+      <button type="button" onclick="addAccount('disliked')">Add Another Disliked Account</button>
+    </div>
+
+    <label for="consent">I consent to data collection and scraping</label>
+    <input type="checkbox" id="consent" name="consent" required>
+
+    <button type="submit">Submit</button>
+    <a id="old-user-button" href="old-user.html">Old User</a>
   </form>
 
   <script>
     const SUPABASE_URL = 'https://aqlpovtwrpjvltppcgbi.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxbHBvdnR3cnBqdmx0cHBjZ2JpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc0Nzg2MzYsImV4cCI6MjA2MzA1NDYzNn0.tEocJLT-Ep5-12WMIuRak8SWkEvZ_FbjKsrEkNGaHFM';
     const MAKE_WEBHOOK = 'https://hook.eu2.make.com/fkrr9a1dejsxdzfj2ojwkse7flhyxrh3';
-
-    async function checkName() {
-      const name = document.getElementById('name').value.trim();
-      if (!name) {
-        alert('Please enter your name.');
-        return;
-      }
-
-      // Query Supabase for existing user
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/users?select=user_id,name&name=eq.${encodeURIComponent(name)}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          'apikey': SUPABASE_ANON_KEY
-        }
-      });
-
-      if (!response.ok) {
-        alert('Error checking name. Please try again.');
-        return;
-      }
-
-      const users = await response.json();
-      const chatButton = document.getElementById('chat-button');
-      const newUserFields = document.getElementById('new-user-fields');
-      const submitButton = document.getElementById('submit-button');
-
-      if (users.length === 1) {
-        // Single match found
-        chatButton.disabled = false;
-        chatButton.dataset.userId = users[0].user_id;
-        newUserFields.classList.add('hidden');
-        submitButton.classList.add('hidden');
-        alert(`Welcome back, ${name}! Click Chat to share more about yourself.`);
-      } else if (users.length > 1) {
-        // Multiple matches (rare)
-        alert('Multiple users found with this name. Please enter your Instagram URL to confirm your identity.');
-        newUserFields.classList.remove('hidden');
-        newUserFields.querySelector('#instagram_username').required = true;
-        submitButton.classList.remove('hidden');
-      } else {
-        // No match
-        alert('No account found. Please fill out the full form for a new account.');
-        newUserFields.classList.remove('hidden');
-        submitButton.classList.remove('hidden');
-        newUserFields.querySelectorAll('input, select, textarea').forEach(field => {
-          if (field.id !== 'name') field.required = true;
-        });
-      }
-    }
 
     function addAccount(type) {
       const container = document.getElementById(`${type}-accounts`);
@@ -198,35 +138,10 @@
     document.getElementById('user-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const formData = new FormData(e.target);
-      const name = formData.get('name');
-      const instagramUsername = formData.get('instagram_username');
-      const chatButton = document.getElementById('chat-button');
-
-      // Check if user already exists (for multiple name matches)
-      const checkResponse = await fetch(`${SUPABASE_URL}/rest/v1/users?select=user_id,name&name=eq.${encodeURIComponent(name)}&instagram_username=eq.${encodeURIComponent(instagramUsername)}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          'apikey': SUPABASE_ANON_KEY
-        }
-      });
-
-      if (checkResponse.ok) {
-        const existingUsers = await checkResponse.json();
-        if (existingUsers.length === 1) {
-          chatButton.disabled = false;
-          chatButton.dataset.userId = existingUsers[0].user_id;
-          alert(`Welcome back, ${name}! Click Chat to continue.`);
-          return;
-        }
-      }
-
-      // New user submission
       const personalDetails = {
-        brandMission: formData.get('brand_mission') || '',
-        brandTone: formData.get('brand_tone') || '',
-        humorLevel: parseInt(formData.get('humor_level')) || null
+        brandMission: formData.get('brand_mission'),
+        brandTone: formData.get('brand_tone'),
+        humorLevel: parseInt(formData.get('humor_level'))
       };
 
       // Submit to users table
@@ -238,8 +153,8 @@
           'apikey': SUPABASE_ANON_KEY
         },
         body: JSON.stringify({
-          name,
-          instagram_username: instagramUsername || '',
+          name: formData.get('name'),
+          instagram_username: formData.get('instagram_username'),
           personal_details: personalDetails
         })
       });
@@ -290,16 +205,9 @@
         body: JSON.stringify({ userId })
       });
 
-      // Enable Chat button
-      chatButton.disabled = false;
-      chatButton.dataset.userId = userId;
-      alert('Form submitted successfully! Click Chat to share more about yourself.');
-    });
-
-    function goToChat() {
-      const userId = document.getElementById('chat-button').dataset.userId;
+      // Redirect to chatbot
       window.location.href = `chatbot.html?userId=${userId}`;
-    }
+    });
   </script>
 </body>
 </html>
