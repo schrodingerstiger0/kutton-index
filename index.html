@@ -189,10 +189,20 @@
           })
         });
 
-        const userBody = await userResponse.json();
-        console.log('User Response:', userResponse.status, userBody);
+        let userBody;
+        const userText = await userResponse.text();
+        console.log('User Response:', userResponse.status, userText);
+        try {
+          userBody = userText ? JSON.parse(userText) : [];
+        } catch (jsonError) {
+          console.warn('User response JSON parse failed:', jsonError, 'Raw body:', userText);
+          userBody = [];
+        }
         if (!userResponse.ok) {
           throw new Error('Error saving user data: ' + (userBody.message || userResponse.statusText));
+        }
+        if (!userBody[0]?.user_id) {
+          throw new Error('No user_id in response');
         }
 
         const userId = userBody[0].user_id;
@@ -224,11 +234,18 @@
             body: JSON.stringify(accounts)
           });
 
-          const accountsBody = await accountsResponse.json();
-          console.log('Accounts Response:', accountsResponse.status, accountsBody);
+          let accountsBody;
+          const accountsText = await accountsResponse.text();
+          console.log('Accounts Response:', accountsResponse.status, accountsText);
+          try {
+            accountsBody = accountsText ? JSON.parse(accountsText) : [];
+          } catch (jsonError) {
+            console.warn('Accounts response JSON parse failed:', jsonError, 'Raw body:', accountsText);
+            accountsBody = [];
+          }
           if (!accountsResponse.ok) {
             console.warn('Error saving accounts:', accountsBody.message || accountsResponse.statusText);
-            // Continue to webhook despite account insertion failure
+            // Continue to webhook
           }
         } else {
           console.log('No accounts to submit');
@@ -259,12 +276,6 @@
           errorMessage.textContent = `Webhook error: ${webhookError.message}`;
           errorMessage.style.display = 'block';
         }
-
-        // Delay redirect to show status/error
-        setTimeout(() => {
-          console.log('Redirecting to chatbot.html');
-          window.location.href = `chatbot.html?userId=${userId}`;
-        }, 2000);
       } catch (error) {
         console.error('Submission error:', error);
         errorMessage.textContent = `Error: ${error.message || 'Submission failed. Please try again.'}`;
