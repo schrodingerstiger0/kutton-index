@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -158,6 +159,8 @@
       statusMessage.style.display = 'none';
       statusMessage.textContent = '';
 
+      let userId = null;
+
       try {
         const formData = new FormData(e.target);
         console.log('Form data:', Object.fromEntries(formData));
@@ -180,7 +183,8 @@
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-            'apikey': SUPABASE_ANON_KEY
+            'apikey': SUPABASE_ANON_KEY,
+            'Prefer': 'return=representation'
           },
           body: JSON.stringify({
             name: formData.get('name'),
@@ -202,11 +206,11 @@
           throw new Error('Error saving user data: ' + (userBody.message || userResponse.statusText));
         }
         if (!userBody[0]?.user_id) {
-          throw new Error('No user_id in response');
+          console.warn('No user_id in response, proceeding with webhook');
+        } else {
+          userId = userBody[0].user_id;
+          console.log('User ID:', userId);
         }
-
-        const userId = userBody[0].user_id;
-        console.log('User ID:', userId);
 
         // Submit admired/disliked accounts
         const admiredUrls = formData.getAll('admired_url[]');
@@ -216,10 +220,10 @@
 
         const accounts = [];
         admiredUrls.forEach((url, i) => {
-          if (url) accounts.push({ user_id: userId, account_username: url, account_type: 'admired', description: admiredDescriptions[i] || '' });
+          if (url && userId) accounts.push({ user_id: userId, account_username: url, account_type: 'admired', description: admiredDescriptions[i] || '' });
         });
         dislikedUrls.forEach((url, i) => {
-          if (url) accounts.push({ user_id: userId, account_username: url, account_type: 'disliked', description: dislikedDescriptions[i] || '' });
+          if (url && userId) accounts.push({ user_id: userId, account_username: url, account_type: 'disliked', description: dislikedDescriptions[i] || '' });
         });
 
         if (accounts.length > 0) {
@@ -229,7 +233,8 @@
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-              'apikey': SUPABASE_ANON_KEY
+              'apikey': SUPABASE_ANON_KEY,
+              'Prefer': 'return=representation'
             },
             body: JSON.stringify(accounts)
           });
@@ -245,21 +250,20 @@
           }
           if (!accountsResponse.ok) {
             console.warn('Error saving accounts:', accountsBody.message || accountsResponse.statusText);
-            // Continue to webhook
           }
         } else {
           console.log('No accounts to submit');
         }
 
         // Trigger n8n webhook with timeout
-        console.log('Triggering n8n webhook with userId:', userId);
+        console.log('Triggering n8n webhook with userId:', userId || 'unknown');
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
         try {
           const webhookResponse = await fetch(N8N_WEBHOOK, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId }),
+            body: JSON.stringify({ userId: userId || 'unknown' }),
             signal: controller.signal
           });
           clearTimeout(timeoutId);
