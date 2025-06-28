@@ -189,13 +189,13 @@
           })
         });
 
-        console.log('User Response:', userResponse.status, await userResponse.text());
+        const userBody = await userResponse.json();
+        console.log('User Response:', userResponse.status, userBody);
         if (!userResponse.ok) {
-          throw new Error('Error saving user data');
+          throw new Error('Error saving user data: ' + (userBody.message || userResponse.statusText));
         }
 
-        const userData = await userResponse.json();
-        const userId = userData[0].user_id;
+        const userId = userBody[0].user_id;
         console.log('User ID:', userId);
 
         // Submit admired/disliked accounts
@@ -224,10 +224,14 @@
             body: JSON.stringify(accounts)
           });
 
-          console.log('Accounts Response:', accountsResponse.status, await accountsResponse.text());
+          const accountsBody = await accountsResponse.json();
+          console.log('Accounts Response:', accountsResponse.status, accountsBody);
           if (!accountsResponse.ok) {
-            throw new Error('Error saving accounts');
+            console.warn('Error saving accounts:', accountsBody.message || accountsResponse.statusText);
+            // Continue to webhook despite account insertion failure
           }
+        } else {
+          console.log('No accounts to submit');
         }
 
         // Trigger n8n webhook with timeout
@@ -242,13 +246,13 @@
             signal: controller.signal
           });
           clearTimeout(timeoutId);
-          const webhookText = await webhookResponse.text();
-          console.log('Webhook Response:', webhookResponse.status, webhookText);
+          const webhookBody = await webhookResponse.text();
+          console.log('Webhook Response:', webhookResponse.status, webhookBody);
           if (webhookResponse.ok) {
             statusMessage.textContent = 'Webhook triggered successfully';
             statusMessage.style.display = 'block';
           } else {
-            throw new Error(`Webhook failed with status ${webhookResponse.status}: ${webhookText}`);
+            throw new Error(`Webhook failed with status ${webhookResponse.status}: ${webhookBody}`);
           }
         } catch (webhookError) {
           console.error('Webhook error:', webhookError);
