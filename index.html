@@ -63,11 +63,21 @@
     a#old-user-button:hover {
       background-color: #e0a800;
     }
+    .error-message, .status-message {
+      margin-top: 10px;
+      display: none;
+    }
+    .error-message {
+      color: red;
+    }
+    .status-message {
+      color: green;
+    }
   </style>
 </head>
 <body>
   <h1>Kotton Instagram Reel Script Generator</h1>
-  <form id="user-form">
+  <form id="user-form" novalidate>
     <label for="name">Name</label>
     <input type="text" id="name" name="name" required>
 
@@ -115,14 +125,17 @@
 
     <button type="submit">Submit</button>
     <a id="old-user-button" href="old-user.html">Old User</a>
+    <p id="error-message" class="error-message"></p>
+    <p id="status-message" class="status-message"></p>
   </form>
 
   <script>
     const SUPABASE_URL = 'https://aqlpovtwrpjvltppcgbi.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxbHBvdnR3cnBqdmx0cHBjZ2JpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc0Nzg2MzYsImV4cCI6MjA2MzA1NDYzNn0.tEocJLT-Ep5-12WMIuRak8SWkEvZ_FbjKsrEkNGaHFM';
-    const N8N_WEBHOOK = 'https://hook.eu2.make.com/fkrr9a1dejsxdzfj2ojwkse7flhyxrh3';
+    const N8N_WEBHOOK = 'https://kotton.app.n8n.cloud/webhook-test/11c27a50-0d8e-4774-9b63-6b5b5c447292';
 
     function addAccount(type) {
+      console.log(`Adding ${type} account`);
       const container = document.getElementById(`${type}-accounts`);
       const entry = document.createElement('div');
       entry.className = 'account-entry';
@@ -137,86 +150,122 @@
 
     document.getElementById('user-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const formData = new FormData(e.target);
-      const personalDetails = {
-        brandMission: formData.get('brand_mission'),
-        brandTone: formData.get('brand_tone'),
-        humorLevel: parseInt(formData.get('humor_level'))
-      };
+      console.log('Form submitted');
+      const errorMessage = document.getElementById('error-message');
+      const statusMessage = document.getElementById('status-message');
+      errorMessage.style.display = 'none';
+      errorMessage.textContent = '';
+      statusMessage.style.display = 'none';
+      statusMessage.textContent = '';
 
-      // Submit to users table
-      const userResponse = await fetch(`${SUPABASE_URL}/rest/v1/users`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          'apikey': SUPABASE_ANON_KEY
-        },
-        body: JSON.stringify({
-          name: formData.get('name'),
-          instagram_username: formData.get('instagram_username'),
-          personal_details: personalDetails
-        })
-      });
+      try {
+        const formData = new FormData(e.target);
+        console.log('Form data:', Object.fromEntries(formData));
 
-      console.log('User Response:', userResponse.status, await userResponse.text());
-      if (!userResponse.ok) {
-        alert('Error saving user data');
-        return;
-      }
+        // Validate form
+        if (!formData.get('name') || !formData.get('instagram_username') || !formData.get('brand_mission') || !formData.get('brand_tone') || !formData.get('humor_level') || !formData.get('consent')) {
+          throw new Error('Please fill all required fields');
+        }
 
-      const userData = await userResponse.json();
-      const userId = userData[0].user_id;
+        const personalDetails = {
+          brandMission: formData.get('brand_mission'),
+          brandTone: formData.get('brand_tone'),
+          humorLevel: parseInt(formData.get('humor_level'))
+        };
 
-      // Submit admired/disliked accounts
-      const admiredUrls = formData.getAll('admired_url[]');
-      const admiredDescriptions = formData.getAll('admired_description[]');
-      const dislikedUrls = formData.getAll('disliked_url[]');
-      const dislikedDescriptions = formData.getAll('disliked_description[]');
-
-      const accounts = [];
-      admiredUrls.forEach((url, i) => {
-        if (url) accounts.push({ user_id: userId, account_username: url, account_type: 'admired', description: admiredDescriptions[i] || '' });
-      });
-      dislikedUrls.forEach((url, i) => {
-        if (url) accounts.push({ user_id: userId, account_username: url, account_type: 'disliked', description: dislikedDescriptions[i] || '' });
-      });
-
-      if (accounts.length > 0) {
-        const accountsResponse = await fetch(`${SUPABASE_URL}/rest/v1/instagram_accounts`, {
+        // Submit to users table
+        console.log('Submitting to users table');
+        const userResponse = await fetch(`${SUPABASE_URL}/rest/v1/users`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
             'apikey': SUPABASE_ANON_KEY
           },
-          body: JSON.stringify(accounts)
+          body: JSON.stringify({
+            name: formData.get('name'),
+            instagram_username: formData.get('instagram_username'),
+            personal_details: personalDetails
+          })
         });
 
-        console.log('Accounts Response:', accountsResponse.status, await accountsResponse.text());
-        if (!accountsResponse.ok) {
-          alert('Error saving accounts');
-          return;
+        console.log('User Response:', userResponse.status, await userResponse.text());
+        if (!userResponse.ok) {
+          throw new Error('Error saving user data');
         }
-      }
 
-      // Trigger n8n webhook
-      try {
-        const webhookResponse = await fetch(N8N_WEBHOOK, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId })
+        const userData = await userResponse.json();
+        const userId = userData[0].user_id;
+        console.log('User ID:', userId);
+
+        // Submit admired/disliked accounts
+        const admiredUrls = formData.getAll('admired_url[]');
+        const admiredDescriptions = formData.getAll('admired_description[]');
+        const dislikedUrls = formData.getAll('disliked_url[]');
+        const dislikedDescriptions = formData.getAll('disliked_description[]');
+
+        const accounts = [];
+        admiredUrls.forEach((url, i) => {
+          if (url) accounts.push({ user_id: userId, account_username: url, account_type: 'admired', description: admiredDescriptions[i] || '' });
         });
-        console.log('Webhook Response:', webhookResponse.status, await webhookResponse.text());
-        if (!webhookResponse.ok) {
-          console.error('Webhook failed:', webhookResponse.status);
+        dislikedUrls.forEach((url, i) => {
+          if (url) accounts.push({ user_id: userId, account_username: url, account_type: 'disliked', description: dislikedDescriptions[i] || '' });
+        });
+
+        if (accounts.length > 0) {
+          console.log('Submitting to instagram_accounts table:', accounts);
+          const accountsResponse = await fetch(`${SUPABASE_URL}/rest/v1/instagram_accounts`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+              'apikey': SUPABASE_ANON_KEY
+            },
+            body: JSON.stringify(accounts)
+          });
+
+          console.log('Accounts Response:', accountsResponse.status, await accountsResponse.text());
+          if (!accountsResponse.ok) {
+            throw new Error('Error saving accounts');
+          }
         }
+
+        // Trigger n8n webhook with timeout
+        console.log('Triggering n8n webhook with userId:', userId);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+        try {
+          const webhookResponse = await fetch(N8N_WEBHOOK, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId }),
+            signal: controller.signal
+          });
+          clearTimeout(timeoutId);
+          const webhookText = await webhookResponse.text();
+          console.log('Webhook Response:', webhookResponse.status, webhookText);
+          if (webhookResponse.ok) {
+            statusMessage.textContent = 'Webhook triggered successfully';
+            statusMessage.style.display = 'block';
+          } else {
+            throw new Error(`Webhook failed with status ${webhookResponse.status}: ${webhookText}`);
+          }
+        } catch (webhookError) {
+          console.error('Webhook error:', webhookError);
+          errorMessage.textContent = `Webhook error: ${webhookError.message}`;
+          errorMessage.style.display = 'block';
+        }
+
+        // Delay redirect to show status/error
+        setTimeout(() => {
+          console.log('Redirecting to chatbot.html');
+          window.location.href = `chatbot.html?userId=${userId}`;
+        }, 2000);
       } catch (error) {
-        console.error('Webhook error:', error);
+        console.error('Submission error:', error);
+        errorMessage.textContent = `Error: ${error.message || 'Submission failed. Please try again.'}`;
+        errorMessage.style.display = 'block';
       }
-
-      // Redirect to chatbot
-      window.location.href = `chatbot.html?userId=${userId}`;
     });
   </script>
 </body>
