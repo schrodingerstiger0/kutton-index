@@ -120,7 +120,7 @@
   <script>
     const SUPABASE_URL = 'https://aqlpovtwrpjvltppcgbi.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxbHBvdnR3cnBqdmx0cHBjZ2JpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc0Nzg2MzYsImV4cCI6MjA2MzA1NDYzNn0.tEocJLT-Ep5-12WMIuRak8SWkEvZ_FbjKsrEkNGaHFM';
-    const MAKE_WEBHOOK = 'https://hook.eu2.make.com/fkrr9a1dejsxdzfj2ojwkse7flhyxrh3';
+    const N8N_WEBHOOK = 'https://kotton.app.n8n.cloud/webhook-test/11c27a50-0d8e-4774-9b63-6b5b5c447292';
 
     function addAccount(type) {
       const container = document.getElementById(`${type}-accounts`);
@@ -159,6 +159,7 @@
         })
       });
 
+      console.log('User Response:', userResponse.status, await userResponse.text());
       if (!userResponse.ok) {
         alert('Error saving user data');
         return;
@@ -192,18 +193,27 @@
           body: JSON.stringify(accounts)
         });
 
+        console.log('Accounts Response:', accountsResponse.status, await accountsResponse.text());
         if (!accountsResponse.ok) {
           alert('Error saving accounts');
           return;
         }
       }
 
-      // Trigger Make.com webhook
-      await fetch(MAKE_WEBHOOK, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId })
-      });
+      // Trigger n8n webhook
+      try {
+        const webhookResponse = await fetch(N8N_WEBHOOK, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId })
+        });
+        console.log('Webhook Response:', webhookResponse.status, await webhookResponse.text());
+        if (!webhookResponse.ok) {
+          console.error('Webhook failed:', webhookResponse.status);
+        }
+      } catch (error) {
+        console.error('Webhook error:', error);
+      }
 
       // Redirect to chatbot
       window.location.href = `chatbot.html?userId=${userId}`;
